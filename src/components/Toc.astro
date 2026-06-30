@@ -1,0 +1,71 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const items = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+{
+  items.length > 0 && (
+    <aside class="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 overflow-y-auto py-8 pr-6 xl:block">
+      <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        On this page
+      </p>
+      <ul class="flex flex-col gap-1 border-l border-border" data-toc>
+        {items.map((heading) => (
+          <li>
+            <a
+              href={`#${heading.slug}`}
+              data-toc-link={heading.slug}
+              class:list={[
+                '-ml-px block border-l border-transparent py-1 text-sm text-muted-foreground transition-colors hover:text-foreground',
+                heading.depth === 2 ? 'pl-4' : 'pl-7',
+              ]}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
+
+<script>
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'));
+  if (links.length > 0) {
+    const bySlug = new Map(links.map((link) => [link.dataset.tocLink, link]));
+    const headings = links
+      .map((link) => document.getElementById(link.dataset.tocLink ?? ''))
+      .filter((element): element is HTMLElement => element !== null);
+
+    const setActive = (slug: string | undefined) => {
+      for (const link of links) {
+        const active = link.dataset.tocLink === slug;
+        link.classList.toggle('text-foreground', active);
+        link.classList.toggle('border-primary', active);
+        link.classList.toggle('font-medium', active);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length > 0) {
+          setActive(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-80px 0px -70% 0px', threshold: 0 },
+    );
+
+    for (const heading of headings) observer.observe(heading);
+  }
+</script>

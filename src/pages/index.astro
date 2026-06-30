@@ -1,0 +1,416 @@
+---
+import '@/styles/globals.css';
+import { getCollection } from 'astro:content';
+import { buildNav } from '@/lib/nav';
+import { buttonVariants } from '@/components/ui/button';
+import Header from '@/components/Header.astro';
+import SeoHead from '@/components/SeoHead.astro';
+
+const docs = await getCollection('docs');
+const nav = buildNav(docs);
+const docByTitle = new Map(docs.map((doc) => [doc.data.title, `/${doc.id}`]));
+const docHref = (title: string, fallback: string) => docByTitle.get(title) ?? fallback;
+
+const siteUrl = Astro.site?.href;
+const homeTitle = 'node-sisp documentation';
+const homeDescription =
+  'Documentation for @akira-io/sisp, a Node.js client for SISP and Vinti4 payments in Cabo Verde.';
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'node-sisp docs',
+  url: siteUrl,
+  description: homeDescription,
+  inLanguage: 'en',
+  publisher: { '@type': 'Organization', name: 'akira-io', url: 'https://github.com/akira-io' },
+};
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: '@akira-io/sisp',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Node.js 20+',
+  description: homeDescription,
+  url: siteUrl,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: { '@type': 'Organization', name: 'akira-io', url: 'https://github.com/akira-io' },
+};
+
+const quickLinks = [
+  {
+    title: 'Start in sandbox',
+    eyebrow: 'Install',
+    description: 'Install the package, choose a storage driver, and keep the gateway in sandbox mode.',
+    href: docHref('Installation', '/01-installation'),
+    visual: 'install',
+  },
+  {
+    title: 'Mount the gateway',
+    eyebrow: 'Connect',
+    description: 'Expose payment, callback, result, and status endpoints through your HTTP stack.',
+    href: docHref('Adapters', '/06-adapters'),
+    visual: 'gateway',
+  },
+  {
+    title: 'Operate transactions',
+    eyebrow: 'Operate',
+    description: 'Retry, cancel, refund, reconcile, and inspect the persisted gateway state.',
+    href: docHref('Transaction Management', '/05-transaction-management'),
+    visual: 'operate',
+  },
+];
+
+const examples = [
+  {
+    title: 'Server-rendered checkout',
+    description: 'Plain Fastify pages post directly to the SISP adapter and render the result from storage.',
+    href: docHref('Server-side rendering', '/examples/fastify/03-ssr'),
+    meta: 'Fastify · SSR',
+    action: 'Open SSR flow',
+  },
+  {
+    title: 'API checkout for React',
+    description: 'The SPA requests a payment intent, submits full-page to the gateway, then polls status.',
+    href: docHref('Decoupled SPA (React)', '/examples/fastify/04-react'),
+    meta: 'React · API',
+    action: 'Open SPA flow',
+  },
+  {
+    title: 'Knex-backed gateway',
+    description: 'Use the built-in storage path with migrations, encrypted payloads, and audit logs.',
+    href: docHref('Fastify with knex storage', '/examples/fastify/01-knex'),
+    meta: 'Storage · knex',
+    action: 'Open knex setup',
+  },
+  {
+    title: 'Prisma-backed gateway',
+    description: 'Inject your Prisma client while keeping the same HTTP adapter and transaction behavior.',
+    href: docHref('Fastify with Prisma storage', '/examples/fastify/02-prisma'),
+    meta: 'Storage · Prisma',
+    action: 'Open Prisma setup',
+  },
+];
+
+const docSections = [
+  {
+    title: 'Build',
+    description: 'Create payment requests and mount the HTTP adapter that fits your app.',
+    links: [
+      { title: 'Payment Flow', href: docHref('Payment Flow', '/04-payment-flow') },
+      { title: 'Adapters', href: docHref('Adapters', '/06-adapters') },
+      { title: 'Architecture', href: docHref('Architecture', '/10-architecture') },
+    ],
+  },
+  {
+    title: 'Operate',
+    description: 'Manage lifecycle states after the customer leaves your checkout.',
+    links: [
+      { title: 'Transaction Management', href: docHref('Transaction Management', '/05-transaction-management') },
+      { title: 'Sandbox Testing', href: docHref('Sandbox and Testing', '/08-sandbox-testing') },
+      { title: 'Idempotency and Attempts', href: docHref('Idempotency and Attempts', '/11-idempotency') },
+    ],
+  },
+  {
+    title: 'Reference',
+    description: 'Review security constraints, public exports, and persistence behavior.',
+    links: [
+      { title: 'Security', href: docHref('Security', '/07-security') },
+      { title: 'API Reference', href: docHref('API Reference', '/09-api-reference') },
+      { title: 'Storage Adapters', href: docHref('Storage Adapters', '/12-storage-adapters') },
+    ],
+  },
+];
+
+const metrics = [
+  { label: 'Runtime', value: 'Node.js 20+' },
+  { label: 'Adapters', value: 'Fastify, Express, NestJS' },
+  { label: 'Storage', value: 'Knex and Prisma' },
+];
+
+const footerGroups = [
+  {
+    title: 'Build',
+    links: [
+      { title: 'Installation', href: docHref('Installation', '/01-installation') },
+      { title: 'Configuration', href: docHref('Configuration', '/02-configuration') },
+      { title: 'Quick Start', href: docHref('Quick Start', '/03-quick-start') },
+      { title: 'Payment Flow', href: docHref('Payment Flow', '/04-payment-flow') },
+    ],
+  },
+  {
+    title: 'Examples',
+    links: [
+      { title: 'Server-rendered checkout', href: docHref('Server-side rendering', '/examples/fastify/03-ssr') },
+      { title: 'React checkout', href: docHref('Decoupled SPA (React)', '/examples/fastify/04-react') },
+      { title: 'Knex storage', href: docHref('Fastify with knex storage', '/examples/fastify/01-knex') },
+      { title: 'Prisma storage', href: docHref('Fastify with Prisma storage', '/examples/fastify/02-prisma') },
+    ],
+  },
+  {
+    title: 'Reference',
+    links: [
+      { title: 'API Reference', href: docHref('API Reference', '/09-api-reference') },
+      { title: 'Security', href: docHref('Security', '/07-security') },
+      { title: 'Architecture', href: docHref('Architecture', '/10-architecture') },
+      { title: 'Storage Adapters', href: docHref('Storage Adapters', '/12-storage-adapters') },
+    ],
+  },
+  {
+    title: 'Project',
+    links: [
+      { title: 'GitHub', href: 'https://github.com/akira-io/node-sisp' },
+      { title: 'Issues', href: 'https://github.com/akira-io/node-sisp/issues' },
+      { title: 'Releases', href: 'https://github.com/akira-io/node-sisp/releases' },
+      { title: 'npm package', href: 'https://www.npmjs.com/package/@akira-io/sisp' },
+    ],
+  },
+];
+
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <SeoHead title={homeTitle} description={homeDescription} type="website" />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(websiteSchema)}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(softwareSchema)}
+    />
+  </head>
+  <body class="min-h-screen bg-background text-foreground">
+    <Header nav={nav} />
+
+    <main>
+      <section class="hero-visual relative isolate overflow-hidden">
+        <img
+          src="/images/node-sisp-hero-light.png"
+          alt=""
+          class="hero-visual__image hero-visual__image--light absolute inset-0 -z-20 h-full w-full object-cover object-center"
+          loading="eager"
+          decoding="async"
+        />
+        <img
+          src="/images/node-sisp-hero-dark.png"
+          alt=""
+          class="hero-visual__image hero-visual__image--dark absolute inset-0 -z-20 hidden h-full w-full object-cover object-center"
+          loading="eager"
+          decoding="async"
+        />
+        <div class="hero-visual__transition absolute inset-x-0 bottom-0 -z-10 h-40" aria-hidden="true"></div>
+
+        <div class="mx-auto flex min-h-[660px] max-w-6xl items-center px-5 py-14 sm:px-6 lg:min-h-[720px] lg:px-8">
+          <div class="hero-visual__content relative isolate max-w-xl">
+            <div class="hero-visual__badge inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium shadow-sm backdrop-blur">
+              <span class="size-1.5 rounded-full bg-primary"></span>
+              @akira-io/sisp beta docs
+            </div>
+
+            <h1 class="hero-visual__title mt-6 text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">
+              SISP payments for <span class="text-primary">Node.js</span>
+            </h1>
+            <p class="hero-visual__copy mt-5 text-base leading-7 sm:text-lg">
+              A typed payment client for SISP and Vinti4 integrations: signed requests, verified callbacks, durable transaction state, and local sandbox flows.
+            </p>
+
+            <div class="mt-8 flex flex-wrap gap-3">
+              <a href={docHref('Quick Start', '/03-quick-start')} class={buttonVariants({ size: 'lg' })}>Get started</a>
+              <a
+                href="https://github.com/akira-io/node-sisp"
+                class={`${buttonVariants({ variant: 'outline', size: 'lg' })} hero-visual__github`}
+              >
+                View GitHub
+              </a>
+            </div>
+
+            <div class="hero-visual__meta mt-5 font-mono text-xs">
+              Node.js 20+ · Fastify, Express, NestJS · Knex and Prisma storage
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="landing-shell">
+        <div class="mx-auto max-w-6xl px-5 py-14 sm:px-6 lg:px-8">
+          <div class="integration-board">
+            <div class="integration-board__intro">
+              <p class="section-kicker">Start here</p>
+              <h2>Build the first payment path</h2>
+              <p>
+                Start with a local sandbox loop, then keep the same typed client when you switch to live gateway credentials.
+              </p>
+              <a href={docHref('Quick Start', '/03-quick-start')}>Read quick start</a>
+            </div>
+
+            <div class="integration-board__steps">
+              {
+                quickLinks.map((link, index) => (
+                  <a href={link.href} class="integration-step group">
+                    <div class={`integration-step__visual integration-step__visual--${link.visual}`} aria-hidden="true">
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <i></i>
+                      <i></i>
+                      <i></i>
+                    </div>
+                    <small>{link.eyebrow}</small>
+                    <strong>{link.title}</strong>
+                    <em>{link.description}</em>
+                  </a>
+                ))
+              }
+            </div>
+
+            <div class="integration-board__metrics">
+              {
+                metrics.map((metric) => (
+                  <div>
+                    <span>{metric.label}</span>
+                    <strong>{metric.value}</strong>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="examples" class="landing-section landing-section--muted">
+        <div class="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Examples</p>
+              <h2>Choose the checkout shape</h2>
+            </div>
+            <p>
+              The examples are not toy snippets. They map to real integration choices: server-rendered checkout, SPA handoff, and storage-backed gateway state.
+            </p>
+          </div>
+
+          <div class="example-gallery">
+            <a href={examples[0].href} class="example-card example-card--feature group">
+              <div class="example-creative" aria-hidden="true">
+                <div class="example-creative__panel">
+                  <div class="example-creative__bar">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                  </div>
+                  <div class="example-creative__screen">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+                <div class="example-creative__route">
+                  <b></b>
+                  <b></b>
+                  <b></b>
+                </div>
+                <div class="example-creative__receipt">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+              <div class="example-card__copy">
+                <span>{examples[0].meta}</span>
+                <strong>{examples[0].title}</strong>
+                <small>{examples[0].description}</small>
+                <em>{examples[0].action}</em>
+              </div>
+            </a>
+
+            <div class="example-card-list">
+              {
+                examples.slice(1).map((example) => (
+                  <a href={example.href} class="example-card group">
+                    <span>{example.meta}</span>
+                    <strong>{example.title}</strong>
+                    <small>{example.description}</small>
+                    <em>{example.action}</em>
+                  </a>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="landing-section">
+        <div class="mx-auto max-w-6xl px-5 py-16 sm:px-6 lg:px-8">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Docs map</p>
+              <h2>Move by task, not by file</h2>
+            </div>
+            <p>
+              The reference is grouped around the jobs you do while taking a payment integration from sandbox to production.
+            </p>
+          </div>
+
+          <div class="docs-routes">
+            {
+              docSections.map((section, index) => (
+                <section class="docs-route">
+                  <div class="docs-route__index">{String(index + 1).padStart(2, '0')}</div>
+                  <div class="docs-route__body">
+                    <h3>{section.title}</h3>
+                    <p>{section.description}</p>
+                    <div>
+                      {section.links.map((link) => (
+                        <a href={link.href}>{link.title}</a>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="mx-auto max-w-6xl px-5 py-12 sm:px-6 lg:px-8">
+        <div class="site-footer__top">
+          <div class="site-footer__identity">
+            <a href="/" class="site-footer__brand">node-sisp</a>
+            <span>Beta docs</span>
+            <p>Typed SISP and Vinti4 payments for Node.js applications in Cabo Verde.</p>
+            <div class="site-footer__install" aria-label="Install command">
+              <small>Install</small>
+              <code>npm install @akira-io/sisp</code>
+            </div>
+          </div>
+
+          <div class="site-footer__nav">
+            {
+              footerGroups.map((group) => (
+                <nav class="site-footer__group" aria-label={`${group.title} footer links`}>
+                  <h2>{group.title}</h2>
+                  {group.links.map((link) => (
+                    <a href={link.href}>{link.title}</a>
+                  ))}
+                </nav>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="site-footer__bottom">
+          <span>@akira-io/sisp documentation.</span>
+          <div>
+            <a href="/">Home</a>
+            <a href="#examples">Examples</a>
+            <a href={docHref('API Reference', '/09-api-reference')}>API reference</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
