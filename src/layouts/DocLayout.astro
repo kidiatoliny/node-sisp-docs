@@ -6,6 +6,7 @@ import Header from '@/components/Header.astro';
 import Sidebar from '@/components/Sidebar.astro';
 import Toc from '@/components/Toc.astro';
 import SeoHead from '@/components/SeoHead.astro';
+import { docDates } from '@/lib/docDates';
 
 interface Heading {
   depth: number;
@@ -31,6 +32,8 @@ const pageTitle = `${title} · node-sisp docs`;
 const pageDescription =
   description ?? 'Documentation for the SISP and Vinti4 payment gateway client for Node.js.';
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const siteHref = Astro.site?.href;
+const { published, modified } = docDates(slug);
 
 const articleSchema = {
   '@context': 'https://schema.org',
@@ -39,18 +42,28 @@ const articleSchema = {
   description: pageDescription,
   url: canonical,
   inLanguage: 'en',
-  isPartOf: { '@type': 'WebSite', name: 'node-sisp docs', url: Astro.site?.href },
+  datePublished: published,
+  dateModified: modified,
+  isPartOf: { '@type': 'WebSite', name: 'node-sisp docs', url: siteHref },
   author: { '@type': 'Organization', name: 'akira-io', url: 'https://github.com/akira-io' },
   publisher: { '@type': 'Organization', name: 'akira-io', url: 'https://github.com/akira-io' },
 };
 
+const crumbs = [{ name: 'Docs', item: siteHref }];
+if (slug.startsWith('examples/')) {
+  crumbs.push({ name: 'Examples', item: `${siteHref}#examples` });
+}
+crumbs.push({ name: title, item: canonical });
+
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Docs', item: Astro.site?.href },
-    { '@type': 'ListItem', position: 2, name: title, item: canonical },
-  ],
+  itemListElement: crumbs.map((crumb, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: crumb.name,
+    item: crumb.item,
+  })),
 };
 ---
 
