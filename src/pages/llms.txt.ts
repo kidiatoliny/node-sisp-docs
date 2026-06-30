@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import { buildNav } from '@/lib/nav';
 
 export const GET: APIRoute = async ({ site }) => {
-  const base = site?.href.replace(/\/$/, '') ?? 'https://node-sisp.akira-io.com';
+  const base = site?.href.replace(/\/$/, '') ?? 'https://sisp.akira-io.com';
   const docs = await getCollection('docs');
   const nav = buildNav(docs);
   const descriptions = new Map(docs.map((doc) => [doc.id, doc.data.description]));

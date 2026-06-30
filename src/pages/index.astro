@@ -12,9 +12,9 @@ const docByTitle = new Map(docs.map((doc) => [doc.data.title, `/${doc.id}`]));
 const docHref = (title: string, fallback: string) => docByTitle.get(title) ?? fallback;
 
 const siteUrl = Astro.site?.href;
-const homeTitle = 'node-sisp documentation';
+const homeTitle = 'node-sisp: SISP & Vinti4 payment gateway client for Node.js';
 const homeDescription =
-  'Documentation for @akira-io/sisp, a Node.js client for SISP and Vinti4 payments in Cabo Verde.';
+  'Typed Node.js client for SISP and Vinti4 payments in Cabo Verde: signed requests, verified callbacks, durable transactions, and Express, Fastify, and NestJS adapters.';
 
 const websiteSchema = {
   '@context': 'https://schema.org',
