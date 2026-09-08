@@ -2,6 +2,8 @@
 
 The persistence layer sits behind `SispStorage`, an ORM-neutral port defined in `src/core/contracts/storage.ts`. It describes nine entity repositories plus a `transaction()` unit-of-work, an optional `migrate?()`, and `destroy()`. No engine types leak through the port.
 
+This port is for consumers who want the package's own tables (`sisp_transactions` and friends). If you already own transaction tables and want none of these nine repositories, see [Stateless Mode](13-stateless-mode.md) instead.
+
 ## Default adapter: knex
 
 When you pass a `database` config to `createSisp`, the package builds a `KnexStorage` instance internally:
@@ -17,9 +19,18 @@ const sisp = await createSisp({
 });
 ```
 
-`KnexStorage` handles migrations automatically (`autoMigrate: true` by default) and re-exports its knex instance as `sisp.db` for any raw queries your application needs.
+`KnexStorage` handles migrations automatically (`autoMigrate: true` by default). The core bundle (`@akira-io/sisp`) never imports `knex` at the type level either: `Sisp.db` is typed `unknown` on the main entry so a stateless consumer never has to install `knex` to typecheck. For raw queries, import `knexOf` from the `@akira-io/sisp/knex` subpath:
 
-> Note: `sisp.db` (the raw knex instance) is unavailable (`undefined`) when a non-knex storage is injected; use the repositories via `sisp.models` / `sisp.storage` instead.
+```ts
+import { knexOf } from '@akira-io/sisp/knex';
+
+const db = knexOf(sisp);
+await db(sisp.config.tables.transactions).where('status', 'pending');
+```
+
+> Note: `knexOf(sisp)` returns `undefined` at runtime when a non-knex storage is injected; use the repositories via `sisp.models` / `sisp.storage` instead.
+
+`@akira-io/sisp/knex` also re-exports `createKnexInstance`, `runMigrations`, `MIGRATIONS_TABLE`, `PayloadCipher`, and `runWithLogSource`, all moved off the main entry so importing them is the explicit signal that you are in stateful, knex-backed mode.
 
 ## Prisma adapter
 
@@ -56,6 +67,8 @@ npx @akira-io/sisp prisma --force
 ```
 
 Alternatively, copy the file manually from `node_modules/@akira-io/sisp/prisma/sisp.prisma`.
+
+The shipped schema declares the same unique constraints and indexes as the knex migrations: `merchant_ref` on transactions, `merchant_session`, `(merchant_ref, merchant_session)` and `(transaction_id, attempt_number)` on attempts, plus the secondary indexes callbacks and reconciliation rely on. Keep them when you merge the models into your own schema; the callback pipeline resolves a callback to one attempt by that pair, and the retry logic depends on the unique violation to detect identifier collisions.
 
 **3. Migrate:**
 
@@ -109,6 +122,15 @@ The `provider` value controls how the adapter issues row-level locks:
 
 The same locking behavior applies to the knex adapter: `pg` and `mysql2` use `FOR UPDATE`, `better-sqlite3` no-ops.
 
+## Upgrading the schema
+
+Release 1.0.0-beta.6 adds `sisp_payment_intents.request_hash` (knex migration `0006`) and `sisp_transactions.pos_id` (`0007`), and the Prisma schema gains the unique constraints and indexes listed above. Both adapters write the new columns on every insert, so run the migrations before deploying the new package version:
+
+- knex: `npx @akira-io/sisp migrate` (or `autoMigrate: true`).
+- Prisma: `npx @akira-io/sisp prisma --force`, `prisma migrate dev`, `prisma generate`. The unique constraints fail the migration if existing rows duplicate a `merchant_ref` or `merchant_session`; resolve those first.
+
+`appKey` cannot be rotated in place: rows encrypted with the previous key stop decrypting. Keep the key stable, or set `allowWeakAppKey: true` while a short key is still in use.
+
 ## Contract suite
 
 The shared suite `tests/storage/contract.ts` runs against both `KnexStorage` and `PrismaStorage`, guaranteeing behavioral parity. If a future adapter passes the contract suite, it is safe to use in production.
@@ -133,4 +155,4 @@ const sisp = await createSisp({
 
 Drizzle, Sequelize, TypeORM, and any other ORM follow the same pattern.
 
-**Previous:** [Idempotency and Attempts](11-idempotency.md) | **Next:** [Index](00-index.md)
+**Previous:** [Idempotency and Attempts](11-idempotency.md) | **Next:** [Stateless Mode](13-stateless-mode.md)

@@ -18,19 +18,18 @@ Framework-agnostic Node.js client for the SISP/Vinti4 payment gateway (Cabo Verd
 | 10 | [Architecture](10-architecture.md) | Actions, builders, pipelines, drivers, contracts |
 | 11 | [Idempotency and Attempts](11-idempotency.md) | Payment intents, retries, attempt audit trail, collision handling |
 | 12 | [Storage Adapters](12-storage-adapters.md) | SispStorage port, Prisma quick start, custom ORM adapters |
+| 13 | [Stateless Mode](13-stateless-mode.md) | Zero-database mode, the correlation port, security trade-offs, growing into stateful |
 
 ## Examples
 
 Patterns validated against the live gateway. See [examples](examples/00-index.md).
 
-| # | Example | What it shows |
-|---|---------|---------------|
-| 01 | [Fastify with knex storage](examples/fastify/knex.md) | Mounting the gateway with knex storage and 3D Secure |
-| 01 | [Fastify with Prisma storage](examples/fastify/prisma.md) | The same Fastify app on an injected Prisma client |
-| 02 | [Decoupled SPA (React)](examples/02-spa-react.md) | API-only backend feeding a React frontend |
-| 03 | [Handling cancellation](examples/03-cancellation.md) | Reacting to `transaction:cancelled` |
-| 04 | [Handling failed payments](examples/04-failed-payments.md) | Reacting to `payment:failed` and OTP failures |
-| 05 | [Listing transactions](examples/05-listing-transactions.md) | Paginated, hydrated listing |
-| 06 | [Decoupled SPA: Vue and Svelte](examples/06-spa-frameworks.md) | The same SPA flow in Vue and Svelte |
+Grouped by HTTP adapter; each adapter carries its storage variants (knex, Prisma) plus frontend and behavior patterns.
+
+| Adapter | Examples |
+|---------|----------|
+| Fastify | [Fastify examples](examples/fastify/00-index.md) |
+
+Express and NestJS follow the same per-adapter layout as they are added.
 
 **Next:** [Installation](01-installation.md)

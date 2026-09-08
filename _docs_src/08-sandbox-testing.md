@@ -2,7 +2,7 @@
 
 ## Sandbox mode
 
-With `sandbox: true` (or `driver: 'sandbox'`) the payment form posts to the local `/sandbox` route instead of the real gateway. That route answers with an auto-submitting form carrying a correctly signed callback, so the whole flow (payment, gateway, callback, events, invoice) runs end to end with zero SISP credentials.
+With `sandbox: true` (or `driver: 'sandbox'`) the payment form posts to the local `/sandbox` route instead of the real gateway. Because that route completes any pending transaction with a correctly signed callback, `createSisp` and `createStatelessSisp` refuse `sandbox: true` when `NODE_ENV` is `production` unless `allowSandboxInProduction: true` is set. That route answers with an auto-submitting form carrying a correctly signed callback, so the whole flow (payment, gateway, callback, events, invoice) runs end to end with zero SISP credentials.
 
 Force a specific outcome with the `status` field:
 
@@ -20,7 +20,7 @@ const payload = sisp.generateSandboxPayload(
   'failed',
 );
 
-await sisp.handlePaymentCallback(payload);
+await sisp.handleCallback(payload);
 ```
 
 ## Testing your integration
@@ -58,21 +58,10 @@ it('completes sandbox payments', async () => {
     merchantSession: 'S1',
   });
 
-  const transaction = await sisp.handlePaymentCallback(payload);
+  const { transaction } = await sisp.handleCallback(payload);
 
   expect(transaction.status).toBe('completed');
 });
-```
-
-## Golden vectors
-
-Parity with the PHP implementation is enforced by `tests/fixtures/golden-vectors.json`, generated from the real `laravel-sisp` 2.x code by `scripts/generate-golden-vectors.php`. Regenerate after upstream fingerprint changes:
-
-```bash
-git clone --branch 2.x https://github.com/akira-io/laravel-sisp /tmp/laravel-sisp-2x
-php scripts/generate-golden-vectors.php > tests/fixtures/golden-vectors.json
-php scripts/generate-enums-data.php
-php scripts/generate-countries.php
 ```
 
 **Next:** [API Reference](09-api-reference.md)
